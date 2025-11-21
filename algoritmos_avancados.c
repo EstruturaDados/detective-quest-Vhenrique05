@@ -1,47 +1,164 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 // Desafio Detective Quest
 // Tema 4 - Árvores e Tabela Hash
 // Este código inicial serve como base para o desenvolvimento das estruturas de navegação, pistas e suspeitos.
 // Use as instruções de cada região para desenvolver o sistema completo com árvore binária, árvore de busca e tabela hash.
 
-int main() {
+// CONSTANTES
+#define MAX_STRING 25
 
-    // 🌱 Nível Novato: Mapa da Mansão com Árvore Binária
-    //
-    // - Crie uma struct Sala com nome, e dois ponteiros: esquerda e direita.
-    // - Use funções como criarSala(), conectarSalas() e explorarSalas().
-    // - A árvore pode ser fixa: Hall de Entrada, Biblioteca, Cozinha, Sótão etc.
-    // - O jogador deve poder explorar indo à esquerda (e) ou à direita (d).
-    // - Finalize a exploração com uma opção de saída (s).
-    // - Exiba o nome da sala a cada movimento.
-    // - Use recursão ou laços para caminhar pela árvore.
-    // - Nenhuma inserção dinâmica é necessária neste nível.
+// ESTRUTURAS
+typedef struct Sala {
+	char nome[MAX_STRING];
+	struct Sala* esquerda;
+	struct Sala* direita;
+} Sala;
 
-    // 🔍 Nível Aventureiro: Armazenamento de Pistas com Árvore de Busca
-    //
-    // - Crie uma struct Pista com campo texto (string).
-    // - Crie uma árvore binária de busca (BST) para inserir as pistas coletadas.
-    // - Ao visitar salas específicas, adicione pistas automaticamente com inserirBST().
-    // - Implemente uma função para exibir as pistas em ordem alfabética (emOrdem()).
-    // - Utilize alocação dinâmica e comparação de strings (strcmp) para organizar.
-    // - Não precisa remover ou balancear a árvore.
-    // - Use funções para modularizar: inserirPista(), listarPistas().
-    // - A árvore de pistas deve ser exibida quando o jogador quiser revisar evidências.
+// FUNÇÕES
+Sala* criarSala(const char* nome);
+void explorarSalas(Sala* raiz);
+void conectarSalas(Sala* raiz, Sala* esquerda, Sala* direita);
+void limparSalas(Sala* sala);
 
-    // 🧠 Nível Mestre: Relacionamento de Pistas com Suspeitos via Hash
-    //
-    // - Crie uma struct Suspeito contendo nome e lista de pistas associadas.
-    // - Crie uma tabela hash (ex: array de ponteiros para listas encadeadas).
-    // - A chave pode ser o nome do suspeito ou derivada das pistas.
-    // - Implemente uma função inserirHash(pista, suspeito) para registrar relações.
-    // - Crie uma função para mostrar todos os suspeitos e suas respectivas pistas.
-    // - Adicione um contador para saber qual suspeito foi mais citado.
-    // - Exiba ao final o “suspeito mais provável” baseado nas pistas coletadas.
-    // - Para hashing simples, pode usar soma dos valores ASCII do nome ou primeira letra.
-    // - Em caso de colisão, use lista encadeada para tratar.
-    // - Modularize com funções como inicializarHash(), buscarSuspeito(), listarAssociacoes().
+// IMPLEMENTAÇÃO DAS FUNÇÕES
 
-    return 0;
+// aloca e inicia o valor de uma sala e retornando sua referência
+Sala* criarSala(const char* nome) {
+	// define o vetor para alocar as salas
+	Sala* sala = (Sala*)malloc(sizeof(Sala));
+
+	// se falhar na alocação fecha o programa
+	if (sala == NULL) {
+		printf("[!] Falha de alocação da nova sala!\n");
+		exit(-1);
+	}
+
+	// inicializa os valores da nova sala
+	strcpy(sala->nome, nome);
+	sala->esquerda = nullptr;
+	sala->direita = nullptr;
+
+	// retorna a referência da nova sala
+	return sala;
 }
 
+void conectarSalas(Sala* raiz, Sala* esquerda, Sala* direita) {
+	// se a raiz for nula, cancela operação
+	if (raiz == NULL) return;
+
+	// não há problema dos nós esquerda/direita serem nós nulos
+	raiz->esquerda = esquerda;
+	raiz->direita = direita;
+}
+
+void explorarSalas(Sala* raiz) {
+	// verifica se a sala atual é nula
+	if (raiz == NULL)
+		return;
+
+
+	char escolha;
+	do {
+		// verifica se sala atual é um nó-folha
+		if (raiz->esquerda == NULL && raiz->direita == NULL) {
+			printf("[!] Não há mais caminhos para explorar!\n");
+			printf("[*] Fim de jogo...\n");
+			return;
+		}
+
+		printf("------------------------------\n");
+		printf(" > Você está na sala: %s\n", raiz->nome);
+		printf(" > Selecione uma ação:\n");
+
+		if (raiz->esquerda != NULL) {
+			printf(" - [Q]: Ir para esquerda (%s)\n", raiz->esquerda->nome);
+		}
+
+		if (raiz->direita != NULL) {
+			printf(" - [E]: Ir para direita (%s)\n", raiz->direita->nome);
+		}
+
+		printf(" - [S]: Encerrar o jogo\n");
+		printf("------------------------------\n");
+		printf(">> ");
+		scanf(" %c", &escolha);
+
+		printf("\n------------------------------\n");
+		switch (escolha) {
+		case 's':
+		case 'S':
+			printf("[*] Saindo do jogo...\n");
+			return; // esse return é valido para encerrar a função explorarSalas(Sala*)
+
+		case 'q':
+		case 'Q':
+			if (raiz->esquerda != NULL) {
+				printf("[*] Indo para esquerda... (%s)\n", raiz->esquerda->nome);
+				raiz = raiz->esquerda;
+			} else {
+				printf("[!] Não há salas na esquerda!");
+			}
+
+			break;
+
+		case 'e':
+		case 'E':
+			if (raiz->direita != NULL) {
+				printf("[*] Indo para direita... (%s)\n", raiz->direita->nome);
+				raiz = raiz->direita;
+			} else {
+				printf("[!] Não há salas na direita!");
+			}
+			break;
+
+		default:
+			printf("[!] Opção inválida\n");
+			break;
+		}
+	} while (escolha != 's' && escolha != 'S');
+}
+
+// limpa da memória, usando recursão
+// em sentido pós-fixo transversal (Esquerda - Direita - Raiz)
+void limparSalas(Sala* sala) {
+	if (sala == NULL) {
+		return;
+	}
+
+	limparSalas(sala->esquerda);
+	limparSalas(sala->direita);
+
+	free(sala);
+}
+
+
+int main() {
+	Sala* hall = criarSala("Hall de Entrada");
+	Sala* salaEstar = criarSala("Sala de Estar");
+	Sala* cozinha = criarSala("Cozinha");
+	Sala* biblioteca = criarSala("Biblioteca");
+	Sala* quartos = criarSala("Quartos");
+	Sala* armazem = criarSala("Armazém");
+	Sala* jardim = criarSala("Jardim");
+
+	conectarSalas(hall, salaEstar, cozinha);
+	conectarSalas(salaEstar, quartos, biblioteca);
+	conectarSalas(cozinha, armazem, jardim);
+
+	/*
+	 *              Hall de Entrada
+	 *          /                    \
+	 *    Sala de Estar            Cozinha
+	 *       /     \               /     \
+	 *   Quartos  Biblioteca  Armazém  Jardim
+	 */
+
+	explorarSalas(hall);
+
+	limparSalas(hall);
+
+	return 0;
+}
